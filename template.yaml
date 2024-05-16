@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: |
+  A stack to enable publishing to the Serverless Application Repository from a GitHub action
+Parameters:
+  GitHubUser:
+    Type: String
+    Description: The GitHub user or organization that owns the repository
+  ArtifactsBucketName:
+    Type: String
+    Description: The name of the S3 bucket where the artefacts are stored
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: github-sar-publisher
+    Description: A stack to enable publishing to the Serverless Application Repository from a GitHub action
+    Author: Andy Caine
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ['github', 'publishing', 'serverless']
+    HomePageUrl: https://github.com/andycaine/github-sar-publisher#readme
+    SemanticVersion: 0.1.1
+    SourceCodeUrl: https://github.com/andycaine/github-sar-publisher
+Resources:
+
+  GitHubOIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 1B511ABEAD59C6CE207077C0BF0E0043B1382612
+
+  GitHubSARPublisherRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOIDCProvider
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubUser}/*
+      Policies:
+        - PolicyName: PublishToSAR
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: s3:ListAllMyBuckets
+                Resource: arn:aws:s3:::*
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource: !Sub arn:aws:s3:::${ArtifactsBucketName}
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub arn:aws:s3:::${ArtifactsBucketName}/*
+              - Effect: Allow
+                Action:
+                  - serverlessrepo:CreateApplication
+                  - serverlessrepo:UpdateApplication
+                  - serverlessrepo:CreateApplicationVersion
+                Resource: '*'
+      RoleName: github-sar-publisher
