@@ -34,15 +34,15 @@ jobs:
     steps:
       - name: Git clone
         uses: actions/checkout@v4
-      - name: Build app
-        run: |
-          sam build
       - name: AWS login
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT }}:role/github-sar-publisher
           role-session-name: github-sar-publishing
           aws-region: ${{ env.AWS_REGION }}
+      - name: Build app
+        run: |
+          sam build
       - name: Package app
         run: |
           sam package --s3-bucket ${{ env.ARTIFACT_BUCKET }} --output-template-file packaged.yaml
