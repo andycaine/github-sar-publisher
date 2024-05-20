@@ -19,7 +19,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ['github', 'publishing', 'serverless']
     HomePageUrl: https://github.com/andycaine/github-sar-publisher#readme
-    SemanticVersion: 0.2.0
+    SemanticVersion: 0.2.1
     SourceCodeUrl: https://github.com/andycaine/github-sar-publisher
 Resources:
 
@@ -69,5 +69,6 @@ Resources:
                   - serverlessrepo:UpdateApplication
                   - serverlessrepo:CreateApplicationVersion
                   - serverlessrepo:CreateCloudFormationTemplate
+                  - serverlessrepo:GetApplication
                 Resource: '*'
       RoleName: github-sar-publisher
